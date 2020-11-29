@@ -1,8 +1,8 @@
-= Design Patterns - TP3
+= Design Patterns - TP4
 J.-M. Bruel <jbruel@gmail.com>
 v20.1 {localdate}
 :tdnum: TP4
-:uk:
+:uk!:
 :imagesdir: images
 //------------------------- variables de configuration
 // only used when master document
@@ -57,13 +57,19 @@ endif::[]
 :asciidoc: http://www.methods.co.nz/asciidoc[AsciiDoc]indexterm:[AsciiDoc]
 :asciidoctorlink: http://asciidoctor.org/[Asciidoctor]indexterm:[Asciidoctor]
 //------------------------------------ 
+:cpte: Compte
+:ag: AgenceBancaire
+:app: ApplicationAgenceBancaire
 
-//------------------------------------ Badges --------
-image:https://img.shields.io/github/workflow/status/IU-IPOD-F20/tp3-jmbruel/GitHub%20Classroom%20Workflow?&logo=github-actions&logoColor=white&label=auto+grading["CI status", link="https://github.com/IU-IPOD-F20/tp3-jmbruel"]
-image:https://circleci.com/gh/IU-IPOD-F20/tp3-jmbruel.svg?style=shield["IU-IPOD-F20", link="https://circleci.com/gh/IU-IPOD-F20/tp3-jmbruel"]
- image:../target/coverage.svg[]
-//------------------------------------ Badges --------
 
+ifndef::backend-pdf[]
+//------------------------------------ Badges --------
+image:https://img.shields.io/github/workflow/status/IUT-Blagnac/cpoa-tp4-template/GitHub%20Classroom%20Workflow?&logo=github-actions&logoColor=white&label=auto+grading["CI status", link="https://github.com/IUT-Blagnac/cpoa-tp4-template"]
+image:https://img.shields.io/badge/License-MIT-yellow.svg[License: MIT, linkl="https://opensource.org/licenses/MIT"]
+//------------------------------------ Badges --------
+endif::[]
+
+https://github.com/IUT-Blagnac/cpoa-tp4-template
 
 ifdef::uk[]
 == {tdnum} initial code 
@@ -96,19 +102,19 @@ endif::[]
 //------------------------------------ 
 == {assignment}
 
-{lastName}:: DOE
+{lastName}:: BRUEL
 
-{firstName}:: John
+{firstName}:: Jean-Michel
 
 {group} #::
 
 [%interactive]
-- [ ] {Enseignants}
+- [X] {Enseignants}
 - [ ] 1
 - [ ] 2
 - [ ] 3
 - [ ] 4
-- [X] Innopolis
+- [ ] Innopolis
 
 //------------------------------------ 
 == {requirements}
@@ -216,85 +222,502 @@ endif::[]
 
 :numbered!:
 
-== The _Factory_ pattern
+== Le but : "Objet-ivez" votre code
 
-//----------------------------- Question ------------------
-.*QUESTION*
-[NOTE]
+=== Le problème
+
+Reprendre l'application initiale de gestion de comptes bancaires
+(fichier link:TPMenus_applictionBanque.zip[] sur votre repo).
+Cette application utilise 3 classes principales :
+
+* la classe `{cpte}` : les comptes bancaires proprement dits
+* la classe `{ag}` : classe composée de `{cpte}` permettant de gérer une agence bancaire
+* la classe `{app}` définissant le code fonctionnel de l'application : un jeu de
+menu permettant à un opérateur de banque de réaliser des opérations courantes.
+
+Cette dernière classe (`{app}`) a été écrite dans une approche purement procédurale (ensemble de méthodes statiques).
+
+=== Le but
+
+Le but de ce TP est de passer d'une approche fonctionnelle/procédurale du code applicatif à une approche objet. Nous allons réécrire et refactorer le code de l'application en plusieurs étapes pour obtenir un code :
+
+*	plus facile à maintenir car plus clair,
+*	plus facile à étendre,
+*	donc plus robuste aux changements.
+
+== Etude et reprise de l'existant
+
+ifdef::prof[]
+[icon="{iconsdir}/solution.png"]
+[IMPORTANT]
+.Attention PROFS
 ====
-* Fully implement the Pizzeria application so that:
-** it implements the Abstract Factory
-** it implements the Singleton (for the factory)
-** the test program below will produce the result below
+Si c'est trop long : pour "Ajouter un compte" et "Supprimer un
+compte" => leur dire de faire des fonctions "bouchons".
+
+Le but est surtout de faire le reste et non pas les fonctions.
+====
+endif::prof[]
+
+.	Etudier le code proposé pour `{app}`.
+.	Comprendre la structure des méthodes (menus, méthodes réalisant les opérations)
+.	Ajouter les fonctions et sous-menu correspondant à l'exécution suivante :
+
+-------
+--
+  Agence CAISSE ECUREUIL de PIBRAC
+  Menu Général
+--
+  Choisir :
+    1 - Liste des comptes de l'agence
+    2 - Voir un compte (par son numéro)
+    3 - Menu opérations sur comptes
+    4 - Menu gestion des comptes
+
+    0 - Pour quitter ce menu
+Votre choix ?
+3
+
+--
+  Agence CAISSE ECUREUIL de PIBRAC
+  Menu opérations sur comptes
+--
+  Choisir :
+    1 - Déposer de l'argent sur un compte
+    2 - Retirer de l'argent sur un compte
+
+    0 - Pour quitter ce menu
+Votre choix ?
+0
+Fin de Menu opérations sur comptes
+
+--
+  Agence CAISSE ECUREUIL de PIBRAC
+  Menu Général
+--
+  Choisir :
+    1 - Liste des comptes de l'agence
+    2 - Voir un compte (par son numéro)
+    3 - Menu opérations sur comptes
+    4 - Menu gestion des comptes
+
+    0 - Pour quitter ce menu
+Votre choix ?
+4
+--
+  Agence CAISSE ECUREUIL de PIBRAC
+  Menu gestion des comptes
+--
+  Choisir :
+    1 - Ajouter un compte
+    2 - Supprimer un compte
+
+    0 - Pour quitter ce menu
+Votre choix ?
+0
+
+--
+  Agence CAISSE ECUREUIL de PIBRAC
+  Menu Général
+--
+  Choisir :
+    1 - Liste des comptes de l'agence
+    2 - Voir un compte (par son numéro)
+    3 - Menu opérations sur comptes
+    4 - Menu gestion des comptes
+
+    0 - Pour quitter ce menu
+Votre choix ?
+-------
+
+[WARNING]
+====
+.	Rencontrez-vous des difficultés pour ajouter des fonctions dans ce code qui devient "spaghetti" ?
+.	Que pensez-vous de la maintenance de ce code dans 4 ans par un autre programmeur et qui devra ajouter des cascades de menus et de fonctions ?
+.	N'avez-vous pas programmé plusieurs fois la même chose pour faire les menus à l'écran ?
+====
+
+ifdef::prof[]
+[icon="{iconsdir}/solution.png"]
+[IMPORTANT]
+.Attention PROFS
+====
+.	Il y en a partout ... ajout d'une fonction => la fonction + modif du menu complet (affichage, contrôles des saisies, ...).
+.	Maintenance compliquée
+.	Sous-menus se ressemblent ...
+====
+endif::prof[]
+
+== "Objet-iver" les fonctions
+
+=== Principe
+
+[WARNING]
+====
+Vous pouvez réfléchir 5 minutes avant de commencer cette partie : qu'est ce qui pourrait devenir objet et quelles classes seront à créer ?
+====
+
+Nous allons modifier le code en plusieurs classes en observant que :
+
+.	Chaque fonction utilisateur pourrait être programmée séparément sous forme d'un objet que nous appellerons `Action` (option de menu) possédant :
+
+..	le message affiché à l'écran pour "afficher" l'action dans un menu,
+..	une méthode pour exécuter cette option de menu.
+
+.	Un menu pourrait être programmé séparément sous forme d'un objet que nous appellerons `ActionList` (liste d'actions de menus) possédant :
+
+..	le message affiché à l'écran pour "afficher" le menu comme un sous-menu de menu,
+..	des méthodes pour ajouter/retirer des options de menus dans ce menu,
+..	une méthode pour exécuter cette ce menu (affichage et déclenchement des actions).
+
+=== Les fonctions utilisateurs comme des objets
+
+.	Faire une copie du code source précédent sous le nom `applicationBanqueAction`.
+.	Créer les packages suivants :
 +
-TIP: Start by writing this program and use _QuickFix_ to "generate" the code as much as possible.
+-------
+   application
+   application.action
+   application.actionlist
+-------
 +
-====
-
-=== Rendus attendus
-
-//----------------------------- ToDo ------------------
-.*ToDo*
-[NOTE]
-====
-
-[%interactive]
-* [ ] a `pom.xml` that runs the tests of your application
-* [ ] a `build.gradle` that runs the tests of your application
-* [ ] the class diagram of your application, in a file named `TP3.plantuml`, placed in a `docs` folder in your repo.
-====
-
-We will use the following pizzas model:
-
-.Class diagram of the Pizzas
-image::Pizzas-dc.svg[]
-
-.Testing program
+.	Etudier la définition d'interface suivante et insérer sa définition dans votre projet dans le package `action` :
++
 [source,java]
--------
-public class PizzaTestDrive {
-	public static void main(String[] args) {
-		Pizzeria shopFromBrest = PizzeriaFactory.getInstance().create("Brest");
-		Pizzeria shopFromStrasbourg = PizzeriaFactory.getInstance().create("Strasbourg");
+----
+package action;
+import banque.AgenceBancaire;
+/**
+ * An Action is an object that implements some action of a user's menu.<BR>
+ * It is defined by a message, an optional code, an execute method to "do" the action.
+ */
+public interface Action  {
+	/**
+	 * Message of the action (to show on screen).
+	 *
+	 * @return the message of the action
+	 */
+	public String actionMessage ();
 
-		Pizza pizza = shopFromBrest.orderPizza("cheese");
-		System.out.println("JMB has ordered a " + pizza.getName() + "\n");
+	/**
+	 * Code of the action (may be used to identify the action among other ones).
+	 *
+	 * @return the code of the action
+	 */
+	public String actionCode ();
 
-		pizza = shopFromStrasbourg.orderPizza("cheese");
-		System.out.println("JMI has ordered a " + pizza.getName() + "\n");
-	}
+	/**
+	 * The method to call in order to "execute" the action on <code>ag</code>.
+	 *
+	 * @param ag the AgenceBancaire on which the action may act on
+	 * @throws Exception when an uncaught exception occurs during execution
+	*/
+	public void execute(AgenceBancaire ag) throws Exception;
 }
--------
+----
++
+.	Déclarer une classe par action (option de menu) à utiliser. Commencer par "Liste des comptes de l'agence" :
+..	Créer une classe (le nom `ActionListeDesComptes` paraît adapté) dans le package `application.action`,
+..	qui implémente `Action`,
+..	dotée de deux attributs (message, code)
+..	écrire le code dont un constructeur correctement paramétré,
+..	la méthode `execute(AgenceBancaire)` réalisera l'affichage écran de la liste des comptes de l'agence bancaire en paramètre.
+.	De la même manière, déclarer une classe pour l'action "Voir un compte (par son numéro)" (classe `ActionVoirCompteNumero`) dans le package `application.action`.
 
-.Execution results
-............
-$ java -jar target/pizzeria-1.0.jar
-Preparation of Pizza with Brest style sauce and cheese
-Spread the pizza dough...
-Add the sauce...
-Add the garnitures: 
- Parmigiano reggiano
-Bake 25 minutes at 180 degrees
-Cut the pizza in triangles
-Put the pizza in the official box
-JMB has ordered a Pizza with Brest style sauce and cheese
+=== Les menus utilisateurs comme des objets
 
-Preparation of Pizza Strasbourg style with cheese
-Spread the pizza dough...
-Add the sauce...
-Add the garnitures: 
- Mozzarella
-Bake 25 minutes at 180 degrees
-Cut in square portions
-Put the pizza in the official box
-JMI has ordered a Pizza Strasbourg style with cheese
+.	Etudier la définition d'interface suivante et insérer sa définition dans votre projet dans le package `action` :
++
+[source,java]
+----
+package action;
 
-............
+/**
+ * An ActionList is an object that implements a end-user menu.<BR>
+ * It is defined by a title (printed on top of the menu).<BR>
+ * It is also defined by a list of different action objects that the menu manages.<BR>
+ * It is attended to :<BR>
+ * - display the end-user menu numbered from 1 (list of messages of actions).<BR>
+ * - display a quit option (0).<BR>
+ * - wait for some user response.<BR>
+ * - launch the requested action.<BR>
+ */
+public interface ActionList extends Action {
+	/**
+	 * Title of the list of actions (menu).
+	 *
+	 * @return the title of the action list
+	 */
+	public String listTitle();
 
-.expected Structure
-image::TP3.svg[]
+	/**
+	 * The number of actions in the action list.
+	 *
+	 * @return number of actions in the action list.
+	 */
+	public int size();
 
-WARNING: This assessment is graded. The autograding will run the tests via `gradle test` and `maven test`, as well as `test0` and the test of the model. This will constitute  80%of your grade. The remaining 20% will be evaluated by your TA and will focus on the tests (number and quality).
+	/**
+	 * Add an action at the end of the list action if it does not yet exists.
+	 *
+	 * @param ac the action to add
+	 * @return true if action is added, else false
+	 */
+	public boolean addAction(Action ac);
+}
+----
++
+.	Déclarer une classe `ActionListAgenceBancaire` dans le package `application.actionlist`,
+..	qui implémente `ActionList`,
+..	dotée de quatre attributs (message, code, title, liste des actions). La liste des actions sera les différentes options que l'action list (menu) devra afficher.
+..	écrire le code dont un constructeur correctement paramétré,
+..	la méthode `execute(AgenceBancaire)` réalisera ce qui est défini dans la documentation. Le menu affiché sera identique à celui de la version antérieure de l'application. Chaque option de menu sera numérotée par `execute()` de 1 à n (nombre d'action) + 0 pour sortir du menu.
+
+Vous devez obtenir une architecture comme celle-ci (attention, légèrement différente, avec un attribut code par exemple) :
+
+.Structure de l'application
+image:applicationbanque.svg[]
+
+=== Et maintenant : go ! Maintenance et extension facilitées
+
+.	Créer une classe contenant un main et permettant :
+..	de créer une instance de chaque classe `Action` créée,
+..	de créer une instance de `ActionListAgenceBancaire`,
+..	lancer `execute()` sur l'instance de `ActionListAgenceBancaire`.
++
+[WARNING]
+====
+Ca marche ?
+====
++
+.	Vous pouvez créer les autres actions et sous-menus.
+.	Pourquoi ActionList hérite de Action à votre avis ?
++
+[WARNING]
+====
+On aurait pu utiliser un autre patron appelé Composite ... plus tard peut être
+====
+
+ifdef::prof[]
+[icon="{iconsdir}/solution.png"]
+[CAUTION]
+.Version corrigée
+=====
+Car cela permet d'ajouter un menu dans un menu (un ActionList dans un ActionList)
+=====
+endif::prof[]
+
+== Abstraire le problème
+
+=== Une nouvelle application ... et mince ...
+
+Supposons que nous devions développer une application de gestion d'une liste d'élèves (classes Eleve et GroupeEleve). Elle est basée sur un menu permettant de :
+
+*	Voir la liste des élèves.
+*	Afficher un élève à partir du nom.
+*	Modifier les notes d'une élève.
+*	Ajouter un élève dans le groupe.
+*	Retirer un élève du groupe.
+*	...
+
+Ca vous rappelle des choses ?
+
+Questions :
+
+.	Considérant les nouvelles classes `Eleve` et `GroupeEleve`, peut-on réutiliser telles quelles (sans les modifier) les interfaces `Action` et `ActionList` dans la nouvelle application ?
+.	Si oui : pourquoi ?
+.	Si non : pourquoi ?
+
+ifdef::prof[]
+[icon="{iconsdir}/solution.png"]
+[CAUTION]
+.Version corrigée
+=====
+Non car elles sont paramétrées par AgenceBancaire ...
+=====
+endif::prof[]
+
+=== Abstrayons un peu le problème
+
+Compte tenu des observations de la section précédente, il faudrait des classes `Action` et `ActionList` dont `execute()` prendrait en paramètre n'importe quel objet. Utiliser la classe Object ? Non, la généricité est là pour nous aider ...
+
+.	Faire une copie du code source précédent sous le nom `applicationBanqueActionGenerique`.
+.	Modifier les déclarations des interfaces `Action` et `ActionList` comme suit (attention, tout le code va devenir "erroné") :
++
+[source,java]
+----
+package action;
+/**
+ * An Action is an object that implements some action of a user's menu.<BR>
+ * It is defined by a message, an optional code, an execute method to "do" the action.<BR>
+ * It is parameterized by the  type of object on which the action may act on (execute on).
+ *
+ * @param <E> The type of object on which the action may act on.
+ */
+public interface Action <E> {
+	/**
+	 * Message of the action (to show on screen).
+	 *
+	 * @return the message of the action
+	 */
+	public String actionMessage ();
+
+	/**
+	 * Code of the action (may be used to identify the action among an action list).
+	 *
+	 * @return the code of the action
+	 */
+	public String actionCode ();
+
+	/**
+	 * The method to call in order to "execute" the action on <code>e</code>.
+	 *
+	 * @param e the object on which the action may act on
+	 * @throws Exception when an uncaught exception occurs during execution
+	 */
+	public void execute(E e) throws Exception;
+}
+
+package action;
+/**
+ * An ActionList is an object that implements a end-user menu.<BR>
+ * It is defined by a title (printed on top of the menu).<BR>
+ * It is also defined by a list of different action objects that the menu manages.<BR>
+ * It is attended to :<BR>
+ * - display the end-user menu numbered from 1 (list of messages of actions).<BR>
+ * - display a quit option (0).<BR>
+ * - wait for some user-response.<BR>
+ * - launch the requested action.<BR>
+ *
+ * It is parameterized by the  type of object on which the actions of the list action may act on (execute on).<BR>
+ *
+ * @param <E> The type of object on which the list action may act on.
+ */
+public interface ActionList<E> extends Action<E>{
+	/**
+	 * Title of the list of actions (menu).
+	 *
+	 * @return the title of the action list
+	 */
+	public String listTitle();
+
+	/**
+	 * The number of actions in the action list.
+	 *
+	 * @return number of actions in the action list.
+	 */
+	public int size();
+
+	/**
+	 * Add an action at the end of the list action if it does not yet exists.
+	 *
+	 * @param ac the action to add
+	 * @return true if action is added, else false
+	 */
+	public boolean addAction(Action<E> ac);
+}
+
+----
++
+.	Modifier chaque classe créée (les `Action` puis `ActionList` puis le `main()`) pour soit implémenter la bonne instanciation des interfaces, soit instancier correctement les objets.
+.	Tout doit fonctionner.
+.	Il n'y a plus qu'à faire la nouvelle application.
+
+== Pour aller plus loin : complétons et encore plus d'abstraction
+
+=== Une interface `ActionList` plus complète
+
+.	Faire une copie du projet précédent
+.	Pour de vraies applications, ajouter à l'interface `ActionList` les opérations suivantes :
++
+[source,java]
+----
+	/**
+	 * Add an action in the list action at the specified index if it does not yet exists.
+	 *
+	 * @param ac the action to add
+	 * @param index index to add the action
+	 * @return true if action is added, else false
+	 * @throws IndexOutOfBoundsException if (index < 0) || (index > size())
+	 */
+	public boolean addAction(Action<E> ac, int index);
+
+	/**
+	 * Remove an action from the list action at the specified index.
+	 *
+	 * @param index index to remove the action
+	 * @return true
+	 * @throws IndexOutOfBoundsException if (index < 0) || (index > size())
+	 */
+	public boolean removeAction(int index);
+
+	/**
+	 * Remove an action from the list action.
+	 *
+	 * @param ac the action to remove
+	 * @return true if action is removed (found), else false
+	 */
+	public boolean removeAction(Action<E> ac);
+
+	/**
+	 * List of the messages of actions contained in the action list
+	 *
+	 * @return an array of messages of the list action
+	 */
+	public String[] listOfActions() ;
+}
+----
+
+=== Quid d'`ActionList` ?
+
+La classe `ActionListAgenceBancaire` qui met en oeuvre un menu (qui implémente `ActionList`) est ici créée spécifiquement pour `{ag}`. Mais cela est il nécessaire dans chaque application ? (en supposant ne rien afficher de l'`{ag}`). On devrait pouvoir faire une classe "générique" de gestion de menus composés d'actions et réutilisable dans chaque application.
+
+Alors essayons :
+
+.	Faire une copie du projet de la section précédente
+.	Déplacer la classe `ActionListAgenceBancaire` dans le package `action`.
+.	Renommer cette classe en un nom contenant "ActionList" et bien choisi. AbstractActionList serait TRES mal choisi.
+.	Pour rendre cette classe générique (et non pas abstraite), modifier l'en-tête en
++
+[source,java]
+----
+public class GenericActionList<E>
+	implements ActionList<E>
+----
++
+.	Attention, tout le code va maintenant "klaxonner" en rouge ! normal ...
+.	Modifier chaque fois que nécessaire pour utiliser le type générique E
+.	Enlever tout accès à la classe `{ag}` (affichage nom de la banque, ...)
+.	Vous devriez arriver au bout ...
+.	Enfin dans le main il y aura quelques "klaxons warnings" sur la création d'objets de cette nouvelle classe car il faudra indiquer le type paramètre à la création.
++
+[WARNING]
+====
+ATTENTION : faire une classe générique n'est pas toujours aussi simple. Ici le cas a été simplifié à l'extrême.
+====
+
+=== Troisième étape : abstraction encore plus
+
+Le problème :
+
+.	Supposons que l'on veuille utiliser notre application dans une système différent où saisies et affichages ne se font pas sur le terminal d'exécution de l'application ... Les instructions utilisant `new Scanner (System.in)` ou `System.out.println ...` deviennent obsolètes.
+.	Tout comme l'agence utilisée dans les traitements, ces 2 éléments font maintenant partie du *contexte d'exécution* des actions.
+.	D'autres éléments pourraient être utilisés : des transactions en cours (réservations aériennes), des bases de données, des connexions diverses, ...
+.	Il faut donc créer un *contexte d'exécution* qui sera en paramètre des `Action` et `ActionList`.
+
+Allons-y !
+
+.	Faire une copie du projet de la section précédente (sans généricité).
+.	Dans le package `application`, créer une classe `ApplicationContextAgenceBancaire` implémentant le pattern `Singleton` permettant d'accéder :
+..	A l'agence bancaire "en cours".
+..	Au `Scanner` à utiliser. L'initialiser ici avec un Scanner sur System.in mais autre chose pourrait être utilisé (un fichier, un flux vers un terminal, ...).
+..	A la sortie `PrintStream` à utiliser. Ici ce sera System.out mais autre chose pourrait être utilisé (un fichier, un flux vers un terminal, ...).
+.	Refactorer tout le code :
+..	Les classes `Action` et `ActionList` utilisant maintenant le type `ApplicationContextAgenceBancaire` (à la place de `AgenceBancaire`)
+..	Modifier les accès à l'agence bancaire en utilisant `ApplicationContextAgenceBancaire`.
+..	Modifier les accès à l'entrée standard en utilisant `ApplicationContextAgenceBancaire`.
+..	Modifier les accès à la sortie standard en utilisant `ApplicationContextAgenceBancaire`.
+.	Ca marche ??
 
 ifndef::backend-pdf[.pass:[<i class="fa fa-github"></i>] commit/push]
 ifdef::backend-pdf[.icon:github[] commit/push]

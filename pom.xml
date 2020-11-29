@@ -53,7 +53,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>appli.PizzaTestDrive</mainClass>
+							<mainClass>tp4</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
